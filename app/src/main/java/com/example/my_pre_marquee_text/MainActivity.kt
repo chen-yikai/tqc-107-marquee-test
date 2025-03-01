@@ -149,7 +149,7 @@ fun Main() {
             val currentSpeed = textMovingSpeedSlider.toInt()
             textPos.animateTo(
                 targetValue = screenWidth, animationSpec = tween(
-                    durationMillis = currentSpeed, easing = LinearEasing
+                    durationMillis = 15000 - currentSpeed, easing = LinearEasing
                 )
             )
             textPos.snapTo(-textWidth)
@@ -201,7 +201,7 @@ fun Main() {
                         Slider(
                             value = textFontSizeSlider, onValueChange = {
                                 textFontSizeSlider = it
-                            }, valueRange = 20f..50f
+                            }, valueRange = 20f..100f
                         )
                     }
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
