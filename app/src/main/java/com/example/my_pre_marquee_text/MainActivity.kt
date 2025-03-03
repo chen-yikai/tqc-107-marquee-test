@@ -149,7 +149,7 @@ fun Main() {
             val currentSpeed = textMovingSpeedSlider.toInt()
             textPos.animateTo(
                 targetValue = screenWidth, animationSpec = tween(
-                    durationMillis = 15000 - currentSpeed, easing = LinearEasing
+                    durationMillis = 16000 - currentSpeed, easing = LinearEasing
                 )
             )
             textPos.snapTo(-textWidth)
