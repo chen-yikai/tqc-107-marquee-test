@@ -41,11 +41,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +51,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,7 +65,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -96,15 +92,19 @@ fun Main() {
     val textColors = listOf(
         Color.Black, Color(0xffF50007), Color(0xFFB3BD63), Color(0xffC9A5F5), Color(0xffF56C9F)
     )
+    val bgColors = listOf(
+        Color.White, Color(0xFFE8A0A4), Color(0xFF9A9D8C), Color(0xFFDBC6EC), Color(0xffF56C9F)
+    )
 
     val textPos = remember { Animatable(0f) }
     var textWidth by remember { mutableFloatStateOf(0f) }
     var screenWidth by remember { mutableFloatStateOf(0f) }
     var textInitial by rememberSaveable { mutableStateOf(true) }
     var currentTime by rememberSaveable { mutableStateOf("") }
-
+    var isShow by remember { mutableStateOf(true) }
     var openSheet by remember { mutableStateOf(false) }
     var sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var bgColor by remember { mutableStateOf(0) }
 
     var textFieldValue by rememberSaveable {
         mutableStateOf(
@@ -133,6 +133,13 @@ fun Main() {
                 Config.Color.name, 0
             )
         )
+    }
+
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            isShow = !isShow
+            delay(500L)
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -173,7 +180,6 @@ fun Main() {
         }
     }
 
-
     if (openSheet) {
         ModalBottomSheet(
             sheetState = sheetState,
@@ -181,7 +187,7 @@ fun Main() {
             LazyColumn(
                 Modifier
                     .padding(horizontal = 20.dp)
-                    .height(350.dp),
+                    .height(450.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
@@ -213,7 +219,14 @@ fun Main() {
                             }, valueRange = 500f..15000f
                         )
                     }
-                    Spacer(Modifier.height(20.dp))
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 5.dp)
+                    ) {
+                        Text("Text Color")
+                    }
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Start
@@ -247,7 +260,47 @@ fun Main() {
                             }
                         }
                     }
-
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 5.dp)
+                    ) {
+                        Text("Background Color")
+                    }
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        itemsIndexed(bgColors) { index, item ->
+                            Box(modifier = Modifier
+                                .padding(end = 10.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .border(
+                                    if (bgColor == index) 2.dp else 0.dp,
+                                    Color(0xff7DAEF5),
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .background(item)
+                                .size(70.dp)
+                                .clickable {
+                                    bgColor = index
+                                }) {
+                                Column(Modifier.align(Alignment.BottomEnd)) {
+                                    AnimatedVisibility(bgColor == index) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = "check",
+                                            modifier = Modifier
+                                                .padding(5.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xff7DAEF5))
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(20.dp))
                     Button(
                         onClick = {
@@ -263,13 +316,13 @@ fun Main() {
                     ) { Text("Reset") }
                 }
             }
-
         }
     }
     Box(
         Modifier
             .fillMaxSize()
             .systemBarsPadding()
+            .background(bgColors.get(bgColor))
             .onGloballyPositioned {
                 screenWidth = it.size.width.toFloat()
             }) {
@@ -278,15 +331,17 @@ fun Main() {
         }) {
             Icon(Icons.Default.Settings, contentDescription = "Open Setting Bottom Sheet")
         }
-        Text(if (textInitial) currentTime else textFieldValue,
-            fontWeight = FontWeight.Bold,
-            fontSize = textFontSizeSlider.sp,
-            color = textColors.get(textColor),
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .offset(with(LocalDensity.current) { textPos.value.toDp() }, 0.dp)
-                .onGloballyPositioned {
-                    textWidth = it.size.width.toFloat()
-                })
+        if (isShow) {
+            Text(if (textInitial) currentTime else textFieldValue,
+                fontWeight = FontWeight.Bold,
+                fontSize = textFontSizeSlider.sp,
+                color = textColors.get(textColor),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .offset(with(LocalDensity.current) { textPos.value.toDp() }, 0.dp)
+                    .onGloballyPositioned {
+                        textWidth = it.size.width.toFloat()
+                    })
+        }
     }
 }
